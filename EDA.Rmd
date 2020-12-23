@@ -1,0 +1,143 @@
+---
+title: "COVID Exploratory Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Libraries
+
+```{r}
+library(tidyverse)
+library(here)
+```
+
+```{r}
+covid_data <- read_csv(here::here("weekly_data_lat_long.csv"))
+```
+
+```{r}
+covid_data
+
+# dataframe
+# tibble
+```
+
+```{r}
+str(covid_data)
+```
+
+```{r}
+glimpse(covid_data)
+```
+
+```{r}
+summary(covid_data)
+```
+
+```{r}
+filter(select(covid_data, GEOID, cases), cases == 0)
+
+select(covid_data, GEOID, cases)
+```
+
+```{r}
+View(covid_data)
+```
+
+
+```{r}
+covid_data %>% 
+  select(GEOID, cases) %>%
+  filter(cases > 10)
+```
+
+select()
+filter()
+mutate()
+summarize()
+group_by()
+ungroup()
+arrange()
+
+# How do cases in New Castle County compare to cases in other counties around the 4th of July?
+
+The data includes all counties in DE. We need to focus in on July 5 through July 26.
+
+```{r}
+july_dates <- as.Date(c("2020-07-05", "2020-07-12", "2020-07-19", "2020-07-26"))
+
+covid_data %>% 
+  filter(Date %in% july_dates)
+```
+
+```{r}
+seq.Date(from = as.Date("2020-07-01"),
+         to = as.Date("2020-07-31"),
+         by = "days")
+```
+
+```{r}
+july_covid_cases <- 
+  covid_data %>% 
+  filter(between(Date, as.Date("2020-07-01"), as.Date("2020-07-31")))
+
+july_covid_cases %>% 
+  group_by(County) %>% 
+  summarize(cases = sum(cases)) %>% 
+  ungroup() %>% 
+  arrange(desc(cases))
+```
+
+```{r}
+july_covid_cases %>% 
+  group_by(County) %>% 
+  summarize(tract_dates = n()) %>% 
+  ungroup() %>% 
+  arrange(desc(tract_dates))
+```
+
+
+```{r}
+july_covid_cases %>% 
+  count(County, sort = T)
+```
+
+```{r}
+july_covid_cases %>% 
+  group_by(County) %>% 
+  summarize(cases = sum(cases)) %>% 
+  ungroup() %>% 
+  arrange(desc(cases)) %>% 
+  ggplot(aes(x = County,
+             y = cases)) +
+  geom_col()
+```
+
+```{r}
+july_covid_cases %>% 
+  group_by(County) %>% 
+  summarize(cases = sum(cases)) %>% 
+  ungroup() %>% 
+  arrange(desc(cases)) %>% 
+  ggplot(aes(x = cases, 
+             y = County)) +
+  geom_col()
+```
+
+```{r}
+july_covid_cases %>% 
+  group_by(County, Date) %>% 
+  summarize(cases = sum(cases)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = Date,
+             y = cases,
+             color = County)) +
+  geom_line() +
+  facet_wrap(~ County, ncol = 3) +
+  theme_minimal() +
+  theme(axis.title = element_text(face = "bold"))
+```
+
